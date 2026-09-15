@@ -1,0 +1,418 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BUCIN 💜</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle, #6800b8, #170025 60%, #050008);
+    color: white;
+    overflow: hidden;
+}
+
+.box {
+    width: 90%;
+    max-width: 600px;
+    margin: 80px auto;
+    padding: 35px;
+    text-align: center;
+    background: rgba(20,0,35,.95);
+    border: 2px solid #b000ff;
+    border-radius: 25px;
+    box-shadow: 0 0 40px #8c00ff;
+}
+
+.logo {
+    font-size: 45px;
+    font-weight: bold;
+    color: #e09aff;
+    text-shadow: 0 0 20px #a000ff;
+}
+
+button {
+    padding: 15px 25px;
+    border: none;
+    border-radius: 12px;
+    background: #9800ff;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 20px #9800ff;
+    margin: 8px;
+}
+
+#runButton {
+    position: relative;
+}
+
+#cameraArea {
+    display: none;
+}
+
+video {
+    width: 100%;
+    border-radius: 15px;
+    border: 2px solid #b000ff;
+}
+
+#photos {
+    display: none;
+}
+
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    gap: 7px;
+}
+
+.gallery img {
+    width: 100%;
+    border-radius: 8px;
+}
+
+#permission {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.85);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.popup {
+    width: 90%;
+    max-width: 420px;
+    padding: 30px;
+    text-align: center;
+    background: #170020;
+    border: 2px solid #b000ff;
+    border-radius: 20px;
+    box-shadow: 0 0 40px #8c00ff;
+}
+
+.cancel {
+    background: #333;
+    box-shadow: none;
+}
+
+@media(max-width:600px) {
+    .gallery {
+        grid-template-columns: repeat(2,1fr);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<div class="logo">BUCIN 💜</div>
+
+<h2>Hei cantik 😏</h2>
+
+<p id="message">
+Klik tombol ini yuk!
+</p>
+
+<button id="runButton" onclick="runButton()">
+KLIK AKU 💜
+</button>
+
+
+<!-- CAMERA -->
+
+<div id="cameraArea">
+
+<h3>📸 Kamera</h3>
+
+<video id="video" autoplay playsinline></video>
+
+<p id="counter">
+Bersiap...
+</p>
+
+</div>
+
+
+<!-- PHOTOS -->
+
+<div id="photos">
+
+<h2>LIAT TUH CANTIK KAN? 😆💜</h2>
+
+<div id="gallery" class="gallery"></div>
+
+<button id="deleteButton" onclick="deletePhoto()">
+🗑️ HAPUS FOTO
+</button>
+
+</div>
+
+</div>
+
+
+<!-- PERMISSION -->
+
+<div id="permission">
+
+<div class="popup">
+
+<h2>📸 PERHATIAN</h2>
+
+<p>
+Kamu akan difoto sebanyak <b>5 kali</b>.
+</p>
+
+<p>
+Foto hanya akan ditampilkan di halaman ini.
+</p>
+
+<button class="cancel" onclick="closePermission()">
+BATAL
+</button>
+
+<button onclick="startCamera()">
+SAYA SETUJU
+</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+let clicks = 0;
+let photos = [];
+let stream = null;
+
+
+/* TOMBOL LARI */
+
+function runButton() {
+
+    clicks++;
+
+    const button =
+        document.getElementById("runButton");
+
+    const message =
+        document.getElementById("message");
+
+    if (clicks < 5) {
+
+        button.style.position = "fixed";
+
+        button.style.left =
+            Math.random() * (window.innerWidth - 150) + "px";
+
+        button.style.top =
+            Math.random() * (window.innerHeight - 80) + "px";
+
+        message.innerHTML =
+            "HAHA 😆 coba lagi! " + clicks + " / 5";
+
+    } else {
+
+        button.style.display = "none";
+
+        message.innerHTML =
+            "halo kamu cantik deh 😳<br><br>Coba klik ini...";
+
+        const newButton =
+            document.createElement("button");
+
+        newButton.innerHTML =
+            "💜 KLIK INI 💜";
+
+        newButton.onclick =
+            openPermission;
+
+        message.appendChild(
+            document.createElement("br")
+        );
+
+        message.appendChild(newButton);
+    }
+}
+
+
+/* PERMISSION */
+
+function openPermission() {
+
+    document.getElementById("permission").style.display =
+        "flex";
+}
+
+function closePermission() {
+
+    document.getElementById("permission").style.display =
+        "none";
+}
+
+
+/* CAMERA */
+
+async function startCamera() {
+
+    closePermission();
+
+    try {
+
+        stream =
+            await navigator.mediaDevices.getUserMedia({
+                video: true
+            });
+
+        const video =
+            document.getElementById("video");
+
+        video.srcObject = stream;
+
+        document.getElementById("cameraArea").style.display =
+            "block";
+
+        document.getElementById("message").innerHTML =
+            "📸 Kamera aktif!";
+
+        await new Promise(resolve => {
+
+            if (video.readyState >= 2) {
+                resolve();
+            } else {
+                video.onloadedmetadata = resolve;
+            }
+
+        });
+
+        await new Promise(resolve =>
+            setTimeout(resolve, 1500)
+        );
+
+        await automaticPhotos(video);
+
+    } catch(error) {
+
+        document.getElementById("message").innerHTML =
+            "❌ Kamera tidak diizinkan.";
+
+        console.log(error);
+    }
+}
+
+
+/* 5 FOTO OTOMATIS */
+
+async function automaticPhotos(video) {
+
+    for(let i = 0; i < 5; i++) {
+
+        document.getElementById("counter").innerHTML =
+            "📸 Mengambil foto " + (i + 1) + " / 5";
+
+        await new Promise(resolve =>
+            setTimeout(resolve, 1000)
+        );
+
+        const canvas =
+            document.createElement("canvas");
+
+        canvas.width =
+            video.videoWidth;
+
+        canvas.height =
+            video.videoHeight;
+
+        const ctx =
+            canvas.getContext("2d");
+
+        ctx.drawImage(
+            video,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        photos.push(
+            canvas.toDataURL("image/png")
+        );
+    }
+
+    if(stream) {
+
+        stream.getTracks().forEach(
+            track => track.stop()
+        );
+
+        stream = null;
+    }
+
+    document.getElementById("cameraArea").style.display =
+        "none";
+
+    showPhotos();
+}
+
+
+/* TAMPILKAN FOTO */
+
+function showPhotos() {
+
+    document.getElementById("photos").style.display =
+        "block";
+
+    const gallery =
+        document.getElementById("gallery");
+
+    gallery.innerHTML = "";
+
+    photos.forEach(photo => {
+
+        const img =
+            document.createElement("img");
+
+        img.src = photo;
+
+        gallery.appendChild(img);
+    });
+
+    document.getElementById("message").innerHTML =
+        "Lihat tuh cantik kan? 😆💜";
+}
+
+
+/* TOMBOL HAPUS KABUR */
+
+function deletePhoto() {
+
+    const button =
+        document.getElementById("deleteButton");
+
+    button.style.position = "fixed";
+
+    button.style.left =
+        Math.random() * (window.innerWidth - 180) + "px";
+
+    button.style.top =
+        Math.random() * (window.innerHeight - 80) + "px";
+}
+
+</script>
+
+</body>
+</html>
+```
